@@ -162,7 +162,7 @@ def cornell_box_scene(dist, side, areaLS=False):
 
 # --------------------------------------------------Set up variables
 FILENAME = 'rendered_image'
-DIRECTORY = '.\\out\\'
+DIRECTORY = 'out/'
 
 # -------------------------------------------------Main
 # Create Integrator
