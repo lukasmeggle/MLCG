@@ -105,8 +105,7 @@ class Sphere(Primitive):
     # Returns tuple of (bool hit, distance, hit_point, normal)
     def intersect(self, ray):
         ray_dir = Normalize(ray.d)
-        temp_np = np.subtract(ray.o, self.origin.asnumpy())
-        temp = Vector3D(temp_np[0],temp_np[1],temp_np[2])
+        temp = np.subtract(ray.o, self.origin)
         A = Dot(ray_dir, ray_dir)
         B = 2.0 * Dot(ray_dir, temp)
         C = Dot(temp, temp) - self.radius_squared

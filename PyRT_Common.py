@@ -13,38 +13,6 @@ PI = 3.1415926535897932384
 TWO_PI = 6.2831853071795864769
 INVERTED_PI = 0.3183098861837906912
 
-
-# -------------------------------------------------Ray class
-class Ray:
-    # Initializer
-    def __init__(self, origin=np.zeros(3),
-                 direction=np.zeros(3), tmax=HUGEVALUE):
-        self.o = origin
-        self.d = direction
-        self.t_max = tmax
-        self.t_min = EPSILON
-
-    # Member Functions
-    def get_hitpoint(self, t):
-        if type(self.d) == Vector3D:
-            d = self.d.asnumpy()
-        else:
-            d = self.d
-        hitpoint = self.o + d * t
-        return Vector3D(hitpoint[0], hitpoint[1], hitpoint[2])
-
-
-# -------------------------------------------------Structure to hold hit information
-class HitData:
-    def __init__(self, has_hit=False, hit_point=np.zeros(3), normal=np.zeros(3),
-                 hit_distance=HUGEVALUE, primitive_index=-1):
-        self.has_hit = has_hit  # whether or not this object represents a hit
-        self.hit_point = hit_point  # hit point
-        self.normal = normal  # normal at the surface
-        self.hit_distance = hit_distance  # intersection distance along the ray
-        self.primitive_index = primitive_index  # index of the object (primitive) hit by the ray
-
-
 # -------------------------------------------------Vector3D class
 class Vector3D:
     # Initializer
@@ -99,6 +67,33 @@ def orient_normal(normal, direction):
         return normal * -1.0  # flip normal
     else:
         return normal
+
+
+
+# -------------------------------------------------Ray class
+class Ray:
+    # Initializer
+    def __init__(self, origin=Vector3D(0,0,0),
+                 direction=Vector3D(0,0,0), tmax=HUGEVALUE):
+        self.o = origin
+        self.d = direction
+        self.t_max = tmax
+        self.t_min = EPSILON
+
+    # Member Functions
+    def get_hitpoint(self, t):
+        return self.o + self.d * t
+
+
+# -------------------------------------------------Structure to hold hit information
+class HitData:
+    def __init__(self, has_hit=False, hit_point=np.zeros(3), normal=np.zeros(3),
+                 hit_distance=HUGEVALUE, primitive_index=-1):
+        self.has_hit = has_hit  # whether or not this object represents a hit
+        self.hit_point = hit_point  # hit point
+        self.normal = normal  # normal at the surface
+        self.hit_distance = hit_distance  # intersection distance along the ray
+        self.primitive_index = primitive_index  # index of the object (primitive) hit by the ray
 
 
 
