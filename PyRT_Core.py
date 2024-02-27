@@ -37,7 +37,12 @@ class Scene:
 
     def any_hit(self, ray):
         # ASSIGNMENT 1.2: PUT YOUR CODE HERE
-        return False
+        for i in range(len(self.object_list)):
+            this_hit = self.object_list[i].intersect(ray)
+            if this_hit.has_hit:
+                return True
+            else:
+                return False
 
     def closest_hit(self, ray):
         # find closest hit object, its distance, hit_point and normal
@@ -100,7 +105,8 @@ class Sphere(Primitive):
     # Returns tuple of (bool hit, distance, hit_point, normal)
     def intersect(self, ray):
         ray_dir = Normalize(ray.d)
-        temp = np.subtract(ray.o, self.origin)
+        temp_np = np.subtract(ray.o, self.origin.asnumpy())
+        temp = Vector3D(temp_np[0],temp_np[1],temp_np[2])
         A = Dot(ray_dir, ray_dir)
         B = 2.0 * Dot(ray_dir, temp)
         C = Dot(temp, temp) - self.radius_squared

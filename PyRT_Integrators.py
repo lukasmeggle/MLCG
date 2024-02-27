@@ -1,6 +1,8 @@
 from PyRT_Common import *
 from random import randint
 
+from PyRT_Core import *
+
 
 # -------------------------------------------------
 # Integrator Classes
@@ -32,11 +34,13 @@ class Integrator(ABC):
     def render(self):
         # YOU MUST CHANGE THIS METHOD IN ASSIGNMENTS 1.1 and 1.2:
         cam = self.scene.camera  # camera object
-        # ray = Ray()
+
         print('Rendering Image: ' + self.get_filename())
         for x in range(0, cam.width):
             for y in range(0, cam.height):
-                pixel = RGBColor(x/cam.width, y/cam.height, 0)
+                d = cam.get_direction(x, y)
+                ray = Ray(direction=d)
+                pixel = self.compute_color(ray)
                 self.scene.set_pixel(pixel, x, y)  # save pixel to pixel array
             progress = (x / cam.width) * 100
             print('\r\tProgress: ' + str(progress) + '%', end='')
@@ -61,7 +65,11 @@ class IntersectionIntegrator(Integrator):
 
     def compute_color(self, ray):
         # ASSIGNMENT 1.2: PUT YOUR CODE HERE
-        pass
+        if self.scene.any_hit(ray):
+            return RED
+        else:
+            return BLACK
+
 
 
 class DepthIntegrator(Integrator):

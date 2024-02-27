@@ -26,7 +26,12 @@ class Ray:
 
     # Member Functions
     def get_hitpoint(self, t):
-        return self.o + self.d * t
+        if type(self.d) == Vector3D:
+            d = self.d.asnumpy()
+        else:
+            d = self.d
+        hitpoint = self.o + d * t
+        return Vector3D(hitpoint[0], hitpoint[1], hitpoint[2])
 
 
 # -------------------------------------------------Structure to hold hit information
@@ -64,6 +69,9 @@ class Vector3D:
     def __repr__(self):
         return f'Vector3D({self.x}, {self.y}, {self.z})'
 
+    def asnumpy(self):
+        return np.array([self.x, self.y, self.z])
+
 
 # Return dot product between two vectors
 def Dot(a, b):
@@ -91,6 +99,7 @@ def orient_normal(normal, direction):
         return normal * -1.0  # flip normal
     else:
         return normal
+
 
 
 # -------------------------------------------------RGBColour class

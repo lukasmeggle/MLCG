@@ -166,10 +166,10 @@ DIRECTORY = 'out/'
 
 # -------------------------------------------------Main
 # Create Integrator
-integrator = LazyIntegrator(DIRECTORY + FILENAME)
+integrator = IntersectionIntegrator(DIRECTORY + FILENAME)
 
 # Create the scene
-scene = sphere_test_scene(areaLS=False, use_env_map=False)
+scene = sphere_test_scene(areaLS=True, use_env_map=False)
 #scene = cornell_box_scene(0.75, 2, areaLS=False)
 
 # Attach the scene to the integrator
