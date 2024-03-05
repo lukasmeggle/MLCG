@@ -79,8 +79,8 @@ class DepthIntegrator(Integrator):
         self.max_depth = max_depth_
 
     def compute_color(self, ray):
-        # ASSIGNMENT 1.3: PUT YOUR CODE HERE
         pass
+        
 
 
 class NormalIntegrator(Integrator):
@@ -90,7 +90,12 @@ class NormalIntegrator(Integrator):
 
     def compute_color(self, ray):
         # ASSIGNMENT 1.3: PUT YOUR CODE HERE
-        pass
+        hit = self.scene.closest_hit(ray)
+        if hit.has_hit:
+            color = (hit.normal + Vector3D(1,1,1))/2
+            color = RGBColor(color.x, color.y, color.z)
+            return color
+        return BLACK
 
 
 class PhongIntegrator(Integrator):

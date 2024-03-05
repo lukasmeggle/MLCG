@@ -166,7 +166,7 @@ DIRECTORY = 'out/'
 
 # -------------------------------------------------Main
 # Create Integrator
-integrator = IntersectionIntegrator(DIRECTORY + FILENAME)
+integrator = NormalIntegrator(DIRECTORY + FILENAME)
 
 # Create the scene
 scene = sphere_test_scene(areaLS=False, use_env_map=False)
