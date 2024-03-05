@@ -74,12 +74,17 @@ class IntersectionIntegrator(Integrator):
 
 class DepthIntegrator(Integrator):
 
-    def __init__(self, filename_, max_depth_=10):
+    def __init__(self, filename_, max_depth_=5):
         super().__init__(filename_ + '_Depth')
         self.max_depth = max_depth_
 
     def compute_color(self, ray):
-        pass
+        hit = self.scene.closest_hit(ray)
+        if hit.has_hit:
+            color = max(1-hit.hit_distance/self.max_depth, 0)
+            color = RGBColor(color, color, color)
+            return color
+        return BLACK
         
 
 
