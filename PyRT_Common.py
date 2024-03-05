@@ -87,7 +87,7 @@ class Ray:
 
 # -------------------------------------------------Structure to hold hit information
 class HitData:
-    def __init__(self, has_hit=False, hit_point=np.zeros(3), normal=np.zeros(3),
+    def __init__(self, has_hit=False, hit_point=Vector3D(0,0,0), normal=Vector3D(0,0,0),
                  hit_distance=HUGEVALUE, primitive_index=-1):
         self.has_hit = has_hit  # whether or not this object represents a hit
         self.hit_point = hit_point  # hit point
