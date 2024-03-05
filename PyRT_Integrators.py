@@ -110,7 +110,27 @@ class PhongIntegrator(Integrator):
 
     def compute_color(self, ray):
         # ASSIGNMENT 1.4: PUT YOUR CODE HERE
-        pass
+        hit = self.scene.closest_hit(ray)
+        if hit.has_hit:
+            La = self.scene.i_a
+            Ld = BLACK
+            
+            primitive = self.scene.object_list[hit.primitive_index]
+            La = La.multiply(primitive.get_BRDF().kd)
+            for light in self.scene.pointLights:
+                L = light.pos - hit.hit_point
+                ray_light = Ray(hit.hit_point, L)
+                hit_light = self.scene.closest_hit(ray_light)
+                # if the light is blocked by another object
+                if hit_light.has_hit and hit_light.hit_distance < L.norm():
+                    continue
+                # if the light is not blocked compute the diffuse component
+                Ld_temp =  primitive.get_BRDF().get_value(L, 0, hit.normal) 
+                Ld = Ld + Ld_temp.multiply(light.intensity) / L.norm()**2
+               
+            return La + Ld
+            
+        return BLACK
 
 
 class CMCIntegrator(Integrator):  # Classic Monte Carlo Integrator

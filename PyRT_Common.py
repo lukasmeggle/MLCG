@@ -39,6 +39,9 @@ class Vector3D:
 
     def asnumpy(self):
         return np.array([self.x, self.y, self.z])
+    
+    def norm(self):
+        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
 
 # Return dot product between two vectors
