@@ -23,9 +23,11 @@ def collect_samples(function_list, sample_pos_):
 # this function returns the classic Monte Carlo (cmc) estimate of the integral.               #
 # ########################################################################################### #
 def compute_estimate_cmc(sample_prob_, sample_values_):
-    N = len(sample_values_)
-    return np.sum(sample_values_/sample_prob_) * (1/N)
-
+    num_samples = len(sample_prob_)
+    estimate = 0
+    for (sample_prob, sample_value) in zip(sample_prob_, sample_values_):
+        estimate += sample_value.r/sample_prob
+    return estimate/num_samples
 
 # ----------------------------- #
 # ---- Main Script Section ---- #
@@ -74,10 +76,10 @@ print('Ground truth: ' + str(ground_truth))
 # Experimental set-up #
 # ################### #
 ns_min = 20  # minimum number of samples (ns) used for the Monte Carlo estimate
-ns_max = 101  # maximum number of samples (ns) used for the Monte Carlo estimate
-ns_step = 20  # step for the number of samples
+ns_max = 1001  # maximum number of samples (ns) used for the Monte Carlo estimate
+ns_step = 100  # step for the number of samples
 ns_vector = np.arange(start=ns_min, stop=ns_max, step=ns_step)  # the number of samples to use per estimate
-n_estimates = 1  # the number of estimates to perform for each value in ns_vector
+n_estimates = 100  # the number of estimates to perform for each value in ns_vector
 n_samples_count = len(ns_vector)
 
 # Initialize a matrix of estimate error at zero
@@ -92,26 +94,27 @@ results = np.zeros((n_samples_count, n_methods))  # Matrix of average error
 for k, ns in enumerate(ns_vector):
 
     print(f'Computing estimates using {ns} samples')
-    sample_values = np.zeros(ns)
+    avg_abs_error = 0
 
-    # getting a np vector of sample values f(x) from a pdf of random directions
-    for i in range(ns):
-        direction = uniform_pdf.generate_dir(random.random(), random.random()) # returns a sample direction of type vector3D
-        sample_value = cosine_term.eval(direction) # return sample of type float f(x)
-        sample_values[i] = sample_value # assemble them all to a vector of length ns (for all sample points)
+    # compute n_estimates for each sample count (ns)
+    for _ in range(n_estimates):
+        # sample the hemisphere using the uniform pdf
+        #   samples_dir: List[Vector3D] - the sampled directions
+        #   samples_prob: List[float] - the probability of each sample
+        samples_dir, samples_prob = sample_set_hemisphere(ns, uniform_pdf) 
+        
+        # collect the sample values of the integrand
+        #   integrand_samples: List[RGBColor] - the sample values of the integrand (red values only)
+        integrand_samples = collect_samples(integrand, samples_dir)
+        
+        # compute the estimate of the integral using the classic Monte Carlo method
+        #   integral_estimate: float - the estimate of the integral
+        integral_estimate = compute_estimate_cmc(samples_prob, integrand_samples)
+        abs_error_estimate = abs(ground_truth - integral_estimate)
+        avg_abs_error += abs_error_estimate
 
-    # I guess this should be done by using a PDF distribution
-    sample_probabilities = np.full(ns, 1/n_samples_count) # get a vector of probabilities p(x) of ns length for every point x
-    #
-
-    # pass the vector of length ns for the value f(x) and the probability p(x) to estimate the integral
-    estimate_cmc = compute_estimate_cmc(sample_probabilities, sample_values)
-    print(estimate_cmc)
-    # calculate the error of estimation
-    abs_error = abs(ground_truth - estimate_cmc)
-    print(ground_truth)
-    print(abs_error)
-    results[k, 0] = abs_error
+    avg_abs_error /= n_estimates
+    results[k, 0] = avg_abs_error
 
 
 # ################################################################################################# #
@@ -122,4 +125,5 @@ for k in range(len(methods_label)):
     plt.plot(ns_vector, results[:, k], label=method[0], marker=method[1])
 
 plt.legend()
+plt.savefig('out/monte_carlo.png')
 plt.show()
