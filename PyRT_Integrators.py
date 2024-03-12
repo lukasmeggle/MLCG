@@ -119,14 +119,16 @@ class PhongIntegrator(Integrator):
             La = La.multiply(primitive.get_BRDF().kd)
             for light in self.scene.pointLights:
                 L = light.pos - hit.hit_point
-                ray_light = Ray(hit.hit_point, L)
+                L_normalized = Normalize(L)
+                L_norm = L.norm()
+                ray_light = Ray(hit.hit_point, L_normalized, L_norm)
                 hit_light = self.scene.closest_hit(ray_light)
                 # if the light is blocked by another object
-                if hit_light.has_hit and hit_light.hit_distance < L.norm():
+                if hit_light.has_hit:
                     continue
                 # if the light is not blocked compute the diffuse component
-                Ld_temp =  primitive.get_BRDF().get_value(L, 0, hit.normal) 
-                Ld = Ld + Ld_temp.multiply(light.intensity) / L.norm()**2
+                Ld_temp =  primitive.get_BRDF().get_value(L_normalized, 0, hit.normal) 
+                Ld = Ld + Ld_temp.multiply(light.intensity) / L_norm **2
                
             return La + Ld
             
