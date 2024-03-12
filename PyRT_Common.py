@@ -1,7 +1,7 @@
 from math import sqrt, acos, cos, sin, atan2, floor, pi
+import numpy as np
 import cv2
 from random import random
-import numpy as np
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod  # Abstract Base Class
 
