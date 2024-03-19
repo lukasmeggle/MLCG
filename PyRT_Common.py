@@ -63,6 +63,10 @@ def Length(v):
 def Normalize(v):
     return v * (1.0 / Length(v))
 
+# Return the cosine of the angle between two vectors
+def Cosine(a, b):
+    return Dot(a, b) / (Length(a) * Length(b))
+
 
 # Return normal that is pointing on the side as the passed direction
 def orient_normal(normal, direction):

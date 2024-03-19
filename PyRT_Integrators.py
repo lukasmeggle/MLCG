@@ -137,13 +137,41 @@ class PhongIntegrator(Integrator):
 
 class CMCIntegrator(Integrator):  # Classic Monte Carlo Integrator
 
-    def __init__(self, n, filename_, experiment_name=''):
+    def __init__(self, filename_, n=10, experiment_name=''):
         filename_mc = filename_ + '_MC_' + str(n) + '_samples' + experiment_name
         super().__init__(filename_mc)
         self.n_samples = n
+        self.pdf = UniformPDF()
 
     def compute_color(self, ray):
-        pass
+        hit = self.scene.closest_hit(ray)
+        if hit.has_hit:
+            Lr = BLACK
+            samples_dir, samples_prob = sample_set_hemisphere(self.n_samples, self.pdf) 
+            primitive = self.scene.object_list[hit.primitive_index]
+            for dir, prob in zip(samples_dir, samples_prob):
+                # Center the sample around the surface normal
+                centered_dir = center_around_normal(dir, hit.normal)
+                ray_j = Ray(hit.hit_point, centered_dir)
+                hit_j = self.scene.closest_hit(ray_j)
+                
+                brdf = primitive.get_BRDF().get_value(wi=ray_j.d, wo=ray.d, normal=hit.normal)
+                cos_theta = Cosine(hit.normal, ray_j.d)   
+                
+                if hit_j.has_hit:
+                    primitive_j = self.scene.object_list[hit_j.primitive_index]
+                    Li = primitive_j.emission
+                elif self.scene.env_map is not None:
+                    Li = self.scene.env_map.getValue(ray_j.d)
+                else:
+                    Li = WHITE # neutral element for multiplication
+                Lr += Li.multiply(brdf) * cos_theta / prob
+            Lr = Lr / self.n_samples
+            
+        elif self.scene.env_map is not None:
+            Lr = self.scene.env_map.getValue(ray.d)
+                        
+        return Lr
 
 
 class BayesianMonteCarloIntegrator(Integrator):
