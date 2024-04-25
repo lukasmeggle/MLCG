@@ -38,7 +38,7 @@ class SECov(CovarianceFunction):
 
 
 # Gaussian Process class for the unit hemisphere
-class GP:
+class GaussianProcess:
 
     # Initializer
     def __init__(self, cov_func, p_func, noise_=0.01):
@@ -99,8 +99,11 @@ class GP:
         
         # Compute all pairwise covariances using broadcasting
         # Q[i, j] now contains self.cov_func.eval(self.samples_pos[i], self.samples_pos[j])
-        sample_pos_np = np.array(self.samples_pos)
-        Q = self.cov_func.eval(sample_pos_np[:, np.newaxis, :], sample_pos_np[np.newaxis, :, :])
+        # sample_pos_np = np.array(self.samples_pos)
+        # Q = self.cov_func.eval(sample_pos_np[:, np.newaxis, :], sample_pos_np[np.newaxis, :, :])
+        for i in range(n):
+            for j in range(n):
+                Q[i, j] = self.cov_func.eval(self.samples_pos[i], self.samples_pos[j])
 
 
         # Add a diagonal of a small amount of noise to avoid numerical instability problems
@@ -114,7 +117,9 @@ class GP:
         #  based on the position omega_n of the nth sample. In most of the cases, these integrals do not have an
         #  analytic solution. Therefore, we will use classic Monte Carlo to estimate the value of these integrals
         #  (that is, of each element z_i of z).
-
+        
+        assert self.samples_pos is not None, "Samples positions must be known to compute the z vector"
+        
         # STEP 1: Set-up the pdf used to sample the integrals. We will use the same pdf for all integral estimates
         # (a uniform pdf). The number of samples used in the estimate is hardcoded (50.000). This is a rather
         # conservative figure which could perhaps be reduced without impairing the final result.
@@ -150,15 +155,15 @@ class GP:
 
     # Method in charge of computing the BMC integral estimate (assuming the the prior mean function has value 0)
     def compute_integral_BMC(self):
+        assert self.samples_val is not None, "Samples values must be known to compute the integral estimate"
         res = BLACK
 
         # ################## #
         # ADD YOUR CODE HERE #
         # ################## #
-        
         # Since prior mean function is 0, the integral estimate is given by z^t Q^{-1} Y
         
-        res = self.weights @ self.samples_val
+        res = np.sum(self.samples_val * self.weights)
 
 
         return res
