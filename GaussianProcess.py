@@ -3,7 +3,7 @@ from math import exp
 import numpy as np
 from numpy import ndarray
 from abc import ABC, abstractmethod  # Abstract Base Class
-
+from AppWorkbench import collect_samples, compute_estimate_cmc
 
 class CovarianceFunction(ABC):
 
@@ -95,6 +95,12 @@ class GP:
         # ################## #
         # ADD YOUR CODE HERE #
         # ################## #
+        assert self.samples_pos is not None, "Samples positions must be known to compute the covariance matrix Q"
+        
+        # Compute all pairwise covariances using broadcasting
+        # Q[i, j] now contains self.cov_func.eval(self.samples_pos[i], self.samples_pos[j])
+        sample_pos_np = np.array(self.samples_pos)
+        Q = self.cov_func.eval(sample_pos_np[:, np.newaxis, :], sample_pos_np[np.newaxis, :, :])
 
 
         # Add a diagonal of a small amount of noise to avoid numerical instability problems
@@ -116,7 +122,7 @@ class GP:
         ns_z = 50000  # number of samples used to estimate z_i
 
         # STEP 2: Generate a samples set for the MC estimate
-        sample_set_z, probab = sample_set_hemisphere(ns_z, uniform_pdf)
+        sample_set_z, sample_prob_set_z = sample_set_hemisphere(ns_z, uniform_pdf)
         ns = len(self.samples_pos)
         z_vec = np.zeros(ns)
 
@@ -130,8 +136,15 @@ class GP:
             # ################## #
             # ADD YOUR CODE HERE #
             # ################## #
-
-
+            
+            # We want to compute the integral z = S k(omega_i, x)p(x)dx
+            # We will use the classic Monte Carlo method to estimate this integral
+            cov_func_omega_i = lambda x: self.cov_func.eval(omega_i, x)
+            integrand_samples = collect_samples([self.p_func, cov_func_omega_i], sample_set_z)
+            
+            integral_estimate = compute_estimate_cmc(sample_prob_set_z, integrand_samples)
+            
+            z_vec[i] = integral_estimate
 
         return z_vec
 
@@ -142,6 +155,10 @@ class GP:
         # ################## #
         # ADD YOUR CODE HERE #
         # ################## #
+        
+        # Since prior mean function is 0, the integral estimate is given by z^t Q^{-1} Y
+        
+        res = self.weights @ self.samples_val
 
 
         return res
