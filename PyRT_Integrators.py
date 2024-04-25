@@ -3,7 +3,6 @@ from random import randint
 
 from PyRT_Core import *
 
-
 # -------------------------------------------------
 # Integrator Classes
 # -------------------------------------------------
@@ -71,7 +70,6 @@ class IntersectionIntegrator(Integrator):
             return BLACK
 
 
-
 class DepthIntegrator(Integrator):
 
     def __init__(self, filename_, max_depth_=5):
@@ -86,7 +84,6 @@ class DepthIntegrator(Integrator):
             return color
         return BLACK
         
-
 
 class NormalIntegrator(Integrator):
 
@@ -175,11 +172,49 @@ class CMCIntegrator(Integrator):  # Classic Monte Carlo Integrator
 
 
 class BayesianMonteCarloIntegrator(Integrator):
-    def __init__(self, n, myGP, filename_, experiment_name=''):
+    def __init__(self, filename_, n, myGP, experiment_name=''):
         filename_bmc = filename_ + '_BMC_' + str(n) + '_samples' + experiment_name
         super().__init__(filename_bmc)
         self.n_samples = n
         self.myGP = myGP
+        self.myGP.initialize(n)
 
     def compute_color(self, ray):
-        pass
+        hit = self.scene.closest_hit(ray)
+        if hit.has_hit:
+            primitive = self.scene.object_list[hit.primitive_index]
+
+            random_rot = randint(0, 360)
+            # Rotate the hemisphere
+            samples_dir = self.myGP.samples_pos
+            centered_dir = [center_around_normal(sample, hit.normal) for sample in samples_dir]
+
+            rotated_samples_dir = [rotate_around_y(random_rot, sample) for sample in centered_dir]
+
+            integrands_samples = []
+            for dir in rotated_samples_dir:
+                ray_j = Ray(hit.hit_point, dir)
+                hit_j = self.scene.closest_hit(ray_j)
+
+                brdf = primitive.get_BRDF().get_value(wi=ray_j.d, wo=ray.d, normal=hit.normal)
+                cos_theta = Cosine(hit.normal, ray_j.d)
+
+                if hit_j.has_hit:
+                    primitive_j = self.scene.object_list[hit_j.primitive_index]
+                    Li = primitive_j.emission
+                elif self.scene.env_map is not None:
+                    Li = self.scene.env_map.getValue(ray_j.d)
+                else:
+                    Li = WHITE
+                    
+                Lr_i = Li.multiply(brdf) * cos_theta
+                integrands_samples.append(Lr_i)
+            
+            # Compute the estimate
+            self.myGP.add_sample_val(integrands_samples)
+            Lr = self.myGP.compute_integral_BMC()
+            
+
+        elif self.scene.env_map is not None:
+            Lr = self.scene.env_map.getValue(ray.d)
+        return Lr
