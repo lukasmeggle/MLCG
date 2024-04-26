@@ -1,7 +1,9 @@
 from PyRT_Common import *
-from random import randint
+from random import randint, choice
 
 from PyRT_Core import *
+from GaussianProcess import *
+
 
 # -------------------------------------------------
 # Integrator Classes
@@ -172,27 +174,33 @@ class CMCIntegrator(Integrator):  # Classic Monte Carlo Integrator
 
 
 class BayesianMonteCarloIntegrator(Integrator):
-    def __init__(self, filename_, n, myGP, experiment_name=''):
+    def __init__(self, filename_, n, num_gp=3, experiment_name=''):
         filename_bmc = filename_ + '_BMC_' + str(n) + '_samples' + experiment_name
         super().__init__(filename_bmc)
         self.n_samples = n
-        self.myGP = myGP
-        self.myGP.initialize(n)
+        
+        self.num_gp = num_gp
+        self.gp_list = [GaussianProcess(SobolevCov(), Constant(1), noise_=0.01) for i in range(self.num_gp)]
+        # Initialize the GP with n samples
+        for gp in self.gp_list:
+            gp.initialize(self.n_samples)
 
     def compute_color(self, ray):
         hit = self.scene.closest_hit(ray)
         if hit.has_hit:
             primitive = self.scene.object_list[hit.primitive_index]
 
-            random_rot = randint(0, 360)
+            # Sample one GP
+            gp = choice(self.gp_list)
+            samples_dir = gp.samples_pos
             # Rotate the hemisphere
-            samples_dir = self.myGP.samples_pos
-            centered_dir = [center_around_normal(sample, hit.normal) for sample in samples_dir]
+            random_rot = randint(0, 360)
+            rotated_samples_dir = [rotate_around_y(random_rot, sample) for sample in samples_dir]
+            centered_dir = [center_around_normal(sample, hit.normal) for sample in rotated_samples_dir]
 
-            rotated_samples_dir = [rotate_around_y(random_rot, sample) for sample in centered_dir]
 
             integrands_samples = []
-            for dir in rotated_samples_dir:
+            for dir in centered_dir:
                 ray_j = Ray(hit.hit_point, dir)
                 hit_j = self.scene.closest_hit(ray_j)
 
@@ -211,8 +219,8 @@ class BayesianMonteCarloIntegrator(Integrator):
                 integrands_samples.append(Lr_i)
             
             # Compute the estimate
-            self.myGP.add_sample_val(integrands_samples)
-            Lr = self.myGP.compute_integral_BMC()
+            gp.add_sample_val(integrands_samples)
+            Lr = gp.compute_integral_BMC()
             
 
         elif self.scene.env_map is not None:

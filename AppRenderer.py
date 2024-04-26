@@ -1,7 +1,6 @@
 from PyRT_Core import *
 from PyRT_Integrators import *
 import time
-from GaussianProcess import *
 
 def sphere_test_scene(areaLS=False, use_env_map=False):
     # Create a scene object
@@ -165,10 +164,9 @@ FILENAME = 'rendered_image'
 DIRECTORY = 'out/'
 
 # -------------------------------------------------Main
-gp = GaussianProcess(SobolevCov(), Constant(1), noise_=0.01)
 
 # Create Integrator
-integrator = BayesianMonteCarloIntegrator(DIRECTORY + FILENAME, n=40, myGP=gp)
+integrator = BayesianMonteCarloIntegrator(DIRECTORY + FILENAME, n=100, num_gp=20)
 
 # Create the scene
 scene = sphere_test_scene(areaLS=False, use_env_map=True)
