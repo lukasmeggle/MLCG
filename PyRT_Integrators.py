@@ -180,7 +180,7 @@ class BayesianMonteCarloIntegrator(Integrator):
         self.n_samples = n
         
         self.num_gp = num_gp
-        self.gp_list = [GaussianProcess(SobolevCov(), Constant(1), noise_=0.01) for i in range(self.num_gp)]
+        self.gp_list = [GaussianProcess(SobolevCov(), CosineLobe(1), noise_=0.01) for i in range(self.num_gp)]
         # Initialize the GP with n samples
         for gp in self.gp_list:
             gp.initialize(self.n_samples)

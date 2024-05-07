@@ -44,8 +44,7 @@ if __name__ == '__main__':
     # STEP 0                                                               #
     # Set-up the name of the used methods, and their marker (for plotting) #
     # #################################################################### #
-    methods_label = [('MC', 'o'),('MC IS', 'v'), ('BMC', 'x')]
-    # methods_label = [('MC', 'o'), ('MC IS', 'v'), ('BMC', 'x'), ('BMC IS', '1')] # for later practices
+    methods_label = [('MC', 'o'), ('MC IS', 'v'), ('BMC', 'x'), ('BMC IS', '1')]
     n_methods = len(methods_label) # number of tested monte carlo methods
 
     # ######################################################## #
@@ -183,6 +182,33 @@ if __name__ == '__main__':
         
         print(f'Average error: {avg_abs_error}')
 
+    # ################################# #
+    #       BAYESIAN MONTE CARLO IS     #
+    # ################################# #
+    print('== Bayesian Monte Carlo with Importance Sampling ==')
+    
+    conv_func = SobolevCov()
+    p_func = CosineLobe(1)
+    
+    gp = GaussianProcess(conv_func, p_func, noise_=0.01)    
+    
+    for k, ns in enumerate(ns_vector):
+        print(f'Computing estimates using {ns} samples')
+        avg_abs_error = 0
+        
+        samples_dir, _ = sample_set_hemisphere(ns, cosine_pdf)
+        samples_val = collect_samples(integrand, samples_dir)
+        gp.add_sample_pos(samples_dir)
+        gp.add_sample_val(samples_val)
+        for _ in range(n_estimates): 
+            integral_estimate = gp.compute_integral_BMC().r
+            abs_error_estimate = abs(ground_truth - integral_estimate)
+            avg_abs_error += abs_error_estimate
+            
+        avg_abs_error /= n_estimates
+        results[k, 2] = avg_abs_error
+        
+        print(f'Average error: {avg_abs_error}')
 
     # ################################################################################################# #
     # Create a plot with the average error for each method, as a function of the number of used samples #
