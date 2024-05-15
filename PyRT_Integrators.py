@@ -175,7 +175,7 @@ class CMCIntegrator(Integrator):  # Classic Monte Carlo Integrator
 
 class BayesianMonteCarloIntegrator(Integrator):
     def __init__(self, filename_, n, num_gp=3, experiment_name=''):
-        filename_bmc = filename_ + '_BMC_' + str(n) + '_GP_' + num_gp + '_samples' + experiment_name
+        filename_bmc = filename_ + '_BMC_' + str(n) + '_GP_' + str(num_gp) + '_samples' + experiment_name
         super().__init__(filename_bmc)
         self.n_samples = n
         
@@ -205,7 +205,6 @@ class BayesianMonteCarloIntegrator(Integrator):
                 hit_j = self.scene.closest_hit(ray_j)
 
                 brdf = primitive.get_BRDF().get_value(wi=ray_j.d, wo=ray.d, normal=hit.normal)
-                cos_theta = Cosine(hit.normal, ray_j.d)
 
                 if hit_j.has_hit:
                     primitive_j = self.scene.object_list[hit_j.primitive_index]
@@ -215,7 +214,61 @@ class BayesianMonteCarloIntegrator(Integrator):
                 else:
                     Li = WHITE
                     
-                Lr_i = Li.multiply(brdf) * cos_theta
+                Lr_i = Li.multiply(brdf) 
+                integrands_samples.append(Lr_i)
+            
+            # Compute the estimate
+            gp.add_sample_val(integrands_samples)
+            Lr = gp.compute_integral_BMC()
+            
+
+        elif self.scene.env_map is not None:
+            Lr = self.scene.env_map.getValue(ray.d)
+        return Lr
+
+
+class BayesianMonteCarlo_IS_Integrator(Integrator):
+    def __init__(self, filename_, n, num_gp=3, experiment_name=''):
+        filename_bmc = filename_ + '_BMC_IS_' + str(n) + '_GP_' + num_gp + '_samples' + experiment_name
+        super().__init__(filename_bmc)
+        self.n_samples = n
+        
+        self.num_gp = num_gp
+        self.gp_list = [GaussianProcess(SobolevCov(), Constant(1), noise_=0.01) for i in range(self.num_gp)]
+        # Initialize the GP with n samples
+        for gp in self.gp_list:
+            gp.initialize(self.n_samples)
+
+    def compute_color(self, ray):
+        hit = self.scene.closest_hit(ray)
+        if hit.has_hit:
+            primitive = self.scene.object_list[hit.primitive_index]
+
+            # Sample one GP
+            gp = choice(self.gp_list)
+            samples_dir = gp.samples_pos
+            # Rotate the hemisphere
+            random_rot = randint(0, 360)
+            rotated_samples_dir = [rotate_around_y(random_rot, sample) for sample in samples_dir]
+            centered_dir = [center_around_normal(sample, hit.normal) for sample in rotated_samples_dir]
+
+
+            integrands_samples = []
+            for dir in centered_dir:
+                ray_j = Ray(hit.hit_point, dir)
+                hit_j = self.scene.closest_hit(ray_j)
+
+                brdf = primitive.get_BRDF().get_value(wi=ray_j.d, wo=ray.d, normal=hit.normal)
+
+                if hit_j.has_hit:
+                    primitive_j = self.scene.object_list[hit_j.primitive_index]
+                    Li = primitive_j.emission
+                elif self.scene.env_map is not None:
+                    Li = self.scene.env_map.getValue(ray_j.d)
+                else:
+                    Li = WHITE
+                    
+                Lr_i = Li.multiply(brdf) 
                 integrands_samples.append(Lr_i)
             
             # Compute the estimate
