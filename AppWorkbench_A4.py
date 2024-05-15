@@ -83,7 +83,7 @@ if __name__ == '__main__':
     ns_max = 100  # maximum number of samples (ns) used for the Monte Carlo estimate
     ns_step = 20  # step for the number of samples
     ns_vector = np.arange(start=ns_min, stop=ns_max, step=ns_step)  # the number of samples to use per estimate
-    n_estimates = 20  # the number of estimates to perform for each value in ns_vector
+    n_estimates = [50, 50, 20, 20]  # the number of estimates to perform for each value in ns_vector
     n_samples_count = len(ns_vector)
 
     # Initialize a matrix of estimate error at zero
@@ -100,7 +100,7 @@ if __name__ == '__main__':
         avg_abs_error = 0
 
         # compute n_estimates for each sample count (ns)
-        for _ in range(n_estimates):
+        for _ in range(n_estimates[0]):
             # sample the hemisphere using the uniform pdf
             #   samples_dir: List[Vector3D] - the sampled directions
             #   samples_prob: List[float] - the probability of each sample
@@ -116,7 +116,7 @@ if __name__ == '__main__':
             abs_error_estimate = abs(ground_truth - integral_estimate)
             avg_abs_error += abs_error_estimate
 
-        avg_abs_error /= n_estimates
+        avg_abs_error /= n_estimates[0]
         results[k, 0] = avg_abs_error
         
         print(f'Average error: {avg_abs_error}')
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         avg_abs_error = 0
 
         # compute n_estimates for each sample count (ns)
-        for _ in range(n_estimates):
+        for _ in range(n_estimates[1]):
             # sample the hemisphere using the uniform pdf
             #   samples_dir: List[Vector3D] - the sampled directions
             #   samples_prob: List[float] - the probability of each sample
@@ -149,7 +149,7 @@ if __name__ == '__main__':
             abs_error_estimate = abs(ground_truth - integral_estimate)
             avg_abs_error += abs_error_estimate
 
-        avg_abs_error /= n_estimates
+        avg_abs_error /= n_estimates[1]
         results[k, 1] = avg_abs_error
         
         print(f'Average error: {avg_abs_error}')
@@ -172,12 +172,12 @@ if __name__ == '__main__':
         samples_val = collect_samples(integrand, samples_dir)
         gp.add_sample_pos(samples_dir)
         gp.add_sample_val(samples_val)
-        for _ in range(n_estimates): 
+        for _ in range(n_estimates[2]): 
             integral_estimate = gp.compute_integral_BMC().r
             abs_error_estimate = abs(ground_truth - integral_estimate)
             avg_abs_error += abs_error_estimate
             
-        avg_abs_error /= n_estimates
+        avg_abs_error /= n_estimates[2]
         results[k, 2] = avg_abs_error
         
         print(f'Average error: {avg_abs_error}')
@@ -197,16 +197,16 @@ if __name__ == '__main__':
         avg_abs_error = 0
         
         samples_dir, _ = sample_set_hemisphere(ns, cosine_pdf)
-        samples_val = collect_samples(integrand, samples_dir)
+        samples_val = collect_samples([integrand[-1]], samples_dir)
         gp.add_sample_pos(samples_dir)
         gp.add_sample_val(samples_val)
-        for _ in range(n_estimates): 
+        for _ in range(n_estimates[3]): 
             integral_estimate = gp.compute_integral_BMC().r
             abs_error_estimate = abs(ground_truth - integral_estimate)
             avg_abs_error += abs_error_estimate
             
-        avg_abs_error /= n_estimates
-        results[k, 2] = avg_abs_error
+        avg_abs_error /= n_estimates[3]
+        results[k, 3] = avg_abs_error
         
         print(f'Average error: {avg_abs_error}')
 

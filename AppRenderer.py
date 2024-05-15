@@ -166,11 +166,11 @@ DIRECTORY = 'out/'
 # -------------------------------------------------Main
 
 # Create Integrator
-integrator = BayesianMonteCarloIntegrator(DIRECTORY + FILENAME, n=10, num_gp=20)
+integrator = BayesianMonteCarloIntegrator(DIRECTORY + FILENAME, n=10, num_gp=5)
 
 # Create the scene
-# scene = sphere_test_scene(areaLS=False, use_env_map=True)
-scene = cornell_box_scene(0.75, 2, areaLS=False)
+scene = sphere_test_scene(areaLS=False, use_env_map=True)
+# scene = cornell_box_scene(0.75, 2, areaLS=False)
 
 # Attach the scene to the integrator
 integrator.add_scene(scene)

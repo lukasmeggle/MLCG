@@ -175,12 +175,12 @@ class CMCIntegrator(Integrator):  # Classic Monte Carlo Integrator
 
 class BayesianMonteCarloIntegrator(Integrator):
     def __init__(self, filename_, n, num_gp=3, experiment_name=''):
-        filename_bmc = filename_ + '_BMC_' + str(n) + '_samples' + experiment_name
+        filename_bmc = filename_ + '_BMC_' + str(n) + '_GP_' + num_gp + '_samples' + experiment_name
         super().__init__(filename_bmc)
         self.n_samples = n
         
         self.num_gp = num_gp
-        self.gp_list = [GaussianProcess(SobolevCov(), CosineLobe(1), noise_=0.01) for i in range(self.num_gp)]
+        self.gp_list = [GaussianProcess(SobolevCov(), Constant(1), noise_=0.01) for i in range(self.num_gp)]
         # Initialize the GP with n samples
         for gp in self.gp_list:
             gp.initialize(self.n_samples)
