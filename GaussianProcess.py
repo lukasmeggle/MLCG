@@ -168,9 +168,8 @@ class GaussianProcess:
 
         return res
     
-    def initialize(self, ns):
+    def initialize(self, ns, pdf):
         print("Initializing GP...")
-        uniform_pdf = UniformPDF()
-        samples_dir, _ = sample_set_hemisphere(ns, uniform_pdf)
+        samples_dir, _ = sample_set_hemisphere(ns, pdf)
         self.add_sample_pos(samples_dir)
         print(f"Computed weights. Length: {len(self.weights)}")

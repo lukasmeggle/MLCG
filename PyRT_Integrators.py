@@ -183,7 +183,7 @@ class BayesianMonteCarloIntegrator(Integrator):
         self.gp_list = [GaussianProcess(SobolevCov(), Constant(1), noise_=0.01) for i in range(self.num_gp)]
         # Initialize the GP with n samples
         for gp in self.gp_list:
-            gp.initialize(self.n_samples)
+            gp.initialize(self.n_samples, UniformPDF())
 
     def compute_color(self, ray):
         hit = self.scene.closest_hit(ray)
@@ -229,15 +229,15 @@ class BayesianMonteCarloIntegrator(Integrator):
 
 class BayesianMonteCarlo_IS_Integrator(Integrator):
     def __init__(self, filename_, n, num_gp=3, experiment_name=''):
-        filename_bmc = filename_ + '_BMC_IS_' + str(n) + '_GP_' + num_gp + '_samples' + experiment_name
+        filename_bmc = filename_ + '_BMC_IS_' + str(n) + '_GP_' + str(num_gp) + '_samples' + experiment_name
         super().__init__(filename_bmc)
         self.n_samples = n
         
         self.num_gp = num_gp
-        self.gp_list = [GaussianProcess(SobolevCov(), Constant(1), noise_=0.01) for i in range(self.num_gp)]
+        self.gp_list = [GaussianProcess(SobolevCov(), CosineLobe(1), noise_=0.01) for i in range(self.num_gp)]
         # Initialize the GP with n samples
         for gp in self.gp_list:
-            gp.initialize(self.n_samples)
+            gp.initialize(self.n_samples, CosinePDF(1))
 
     def compute_color(self, ray):
         hit = self.scene.closest_hit(ray)
@@ -258,7 +258,7 @@ class BayesianMonteCarlo_IS_Integrator(Integrator):
                 ray_j = Ray(hit.hit_point, dir)
                 hit_j = self.scene.closest_hit(ray_j)
 
-                brdf = primitive.get_BRDF().get_value(wi=ray_j.d, wo=ray.d, normal=hit.normal)
+                brdf_kd = primitive.get_BRDF().kd
 
                 if hit_j.has_hit:
                     primitive_j = self.scene.object_list[hit_j.primitive_index]
@@ -268,7 +268,8 @@ class BayesianMonteCarlo_IS_Integrator(Integrator):
                 else:
                     Li = WHITE
                     
-                Lr_i = Li.multiply(brdf) 
+                # There is no need to multiply by the cosine term since the cosine term is already included in the GP model
+                Lr_i = Li.multiply(brdf_kd) 
                 integrands_samples.append(Lr_i)
             
             # Compute the estimate
