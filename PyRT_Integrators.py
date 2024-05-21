@@ -154,7 +154,7 @@ class CMCIntegrator(Integrator):  # Classic Monte Carlo Integrator
                 ray_j = Ray(hit.hit_point, centered_dir)
                 hit_j = self.scene.closest_hit(ray_j)
                 
-                brdf = primitive.get_BRDF().get_value(wi=ray_j.d, wo=ray.d, normal=hit.normal)
+                brdf = primitive.get_BRDF().kd
                 cos_theta = Cosine(hit.normal, ray_j.d)   
                 
                 if hit_j.has_hit:
@@ -172,6 +172,44 @@ class CMCIntegrator(Integrator):  # Classic Monte Carlo Integrator
                         
         return Lr
 
+
+class CMC_IS_Integrator(Integrator):  # Classic Monte Carlo Integrator with Importance Sampling
+    
+        def __init__(self, filename_, n=10, experiment_name=''):
+            filename_mc = filename_ + '_MC_IS_' + str(n) + '_samples' + experiment_name
+            super().__init__(filename_mc)
+            self.n_samples = n
+            self.pdf = CosinePDF(1)
+    
+        def compute_color(self, ray):
+            hit = self.scene.closest_hit(ray)
+            if hit.has_hit:
+                Lr = BLACK
+                samples_dir, samples_prob = sample_set_hemisphere(self.n_samples, self.pdf) 
+                primitive = self.scene.object_list[hit.primitive_index]
+                for dir, prob in zip(samples_dir, samples_prob):
+                    # Center the sample around the surface normal
+                    centered_dir = center_around_normal(dir, hit.normal)
+                    ray_j = Ray(hit.hit_point, centered_dir)
+                    hit_j = self.scene.closest_hit(ray_j)
+                    
+                    brdf_kd = primitive.get_BRDF().kd
+                    cos_theta = Cosine(hit.normal, ray_j.d)   
+                    
+                    if hit_j.has_hit:
+                        primitive_j = self.scene.object_list[hit_j.primitive_index]
+                        Li = primitive_j.emission
+                    elif self.scene.env_map is not None:
+                        Li = self.scene.env_map.getValue(ray_j.d)
+                    else:
+                        Li = WHITE # neutral element for multiplication
+                    Lr += Li.multiply(brdf_kd) * cos_theta / prob
+                Lr = Lr / self.n_samples
+                
+            elif self.scene.env_map is not None:
+                Lr = self.scene.env_map.getValue(ray.d)
+                            
+            return Lr
 
 class BayesianMonteCarloIntegrator(Integrator):
     def __init__(self, filename_, n, num_gp=3, experiment_name=''):
