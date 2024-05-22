@@ -83,7 +83,7 @@ if __name__ == '__main__':
     ns_max = 100  # maximum number of samples (ns) used for the Monte Carlo estimate
     ns_step = 20  # step for the number of samples
     ns_vector = np.arange(start=ns_min, stop=ns_max, step=ns_step)  # the number of samples to use per estimate
-    n_estimates = [50, 50, 20, 20]  # the number of estimates to perform for each value in ns_vector
+    n_estimates = [50, 50, 10, 10]  # the number of estimates to perform for each value in ns_vector
     n_samples_count = len(ns_vector)
 
     # Initialize a matrix of estimate error at zero
@@ -168,11 +168,11 @@ if __name__ == '__main__':
         print(f'Computing estimates using {ns} samples')
         avg_abs_error = 0
         
-        samples_dir, _ = sample_set_hemisphere(ns, uniform_pdf)
-        samples_val = collect_samples(integrand, samples_dir)
-        gp.add_sample_pos(samples_dir)
-        gp.add_sample_val(samples_val)
         for _ in range(n_estimates[2]): 
+            samples_dir, _ = sample_set_hemisphere(ns, uniform_pdf)
+            samples_val = collect_samples(integrand, samples_dir)
+            gp.add_sample_pos(samples_dir)
+            gp.add_sample_val(samples_val)
             integral_estimate = gp.compute_integral_BMC().r
             abs_error_estimate = abs(ground_truth - integral_estimate)
             avg_abs_error += abs_error_estimate
@@ -196,11 +196,11 @@ if __name__ == '__main__':
         print(f'Computing estimates using {ns} samples')
         avg_abs_error = 0
         
-        samples_dir, _ = sample_set_hemisphere(ns, cosine_pdf)
-        samples_val = collect_samples([integrand[-1]], samples_dir)
-        gp.add_sample_pos(samples_dir)
-        gp.add_sample_val(samples_val)
         for _ in range(n_estimates[3]): 
+            samples_dir, _ = sample_set_hemisphere(ns, cosine_pdf)
+            samples_val = collect_samples([integrand[-1]], samples_dir)
+            gp.add_sample_pos(samples_dir)
+            gp.add_sample_val(samples_val)
             integral_estimate = gp.compute_integral_BMC().r
             abs_error_estimate = abs(ground_truth - integral_estimate)
             avg_abs_error += abs_error_estimate

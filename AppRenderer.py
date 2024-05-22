@@ -166,7 +166,7 @@ DIRECTORY = 'out/'
 # -------------------------------------------------Main
 
 # Create Integrator
-integrator = BayesianMonteCarlo_IS_Integrator(DIRECTORY + FILENAME, n=10, num_gp=5)
+integrator = BayesianMonteCarlo_IS_Integrator(DIRECTORY + FILENAME, n=5, num_gp=5)
 
 # Create the scene
 scene = sphere_test_scene(areaLS=False, use_env_map=True)
